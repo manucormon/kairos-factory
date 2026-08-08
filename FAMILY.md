@@ -136,7 +136,10 @@ default, en vez de tener que redescubrirlos por su cuenta.
    referencia citada en cualquier hermano — se verifica antes de
    citar, nunca se inventa una fuente para sonar más fundamentado.
 
-7. **El alcance no crece solo porque se puede.**
+7. **El alcance no crece solo porque se puede.** Cuando quien
+   construye (Claude Code u otro) agrega capacidad no pedida, se
+   revisa a propósito antes de aceptarla — no se acepta por default
+   solo porque ya está hecha.
 
 8. **El presupuesto temporal es una variable de primera clase.** Una
    predicción que llega después del evento es un fantasma. Cada
@@ -146,11 +149,8 @@ default, en vez de tener que redescubrirlos por su cuenta.
    ocurre en 150ms, `sensory_architecture_factory` debe saber ignorar
    la intención y disparar el reflejo (Touch) de inmediato. La
    latencia no es un detalle de implementación — es un invariante del
-   contrato entre hermanos. (Guardarraíl surgido de revisión externa
-   del consejo LLM, agosto 2026.) Cuando quien
-   construye (Claude Code u otro) agrega capacidad no pedida, se
-   revisa a propósito antes de aceptarla — no se acepta por default
-   solo porque ya está hecha.
+   contrato entre hermanos. (Guardarraíl surgido de revisión del
+   consejo LLM, agosto 2026, aprobado por Manu antes de incorporarlo.)
 
 ## La regla para cuando lleguen más hermanos
 
