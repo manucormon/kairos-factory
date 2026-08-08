@@ -1,0 +1,6 @@
+[submodule "brothers/01_perception"]
+	path = brothers/01_perception
+	url = https://github.com/manucormon/perception-factory.git
+[submodule "brothers/04_govern"]
+	path = brothers/04_govern
+	url = https://github.com/manucormon/sensory-architecture-factory.git
