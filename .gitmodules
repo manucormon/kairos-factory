@@ -4,3 +4,6 @@
 [submodule "brothers/04_govern"]
 	path = brothers/04_govern
 	url = https://github.com/manucormon/sensory-architecture-factory.git
+[submodule "brothers/02_intent/intent-factory"]
+	path = brothers/02_intent/intent-factory
+	url = https://github.com/manucormon/intent-factory.git
