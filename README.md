@@ -17,12 +17,14 @@ PAST/PRESENT ──────► FUTURE (physics) ──────► FUTURE
  World-facing          World-facing             World-facing            Human-facing
 ```
 
-| # | Brother | Repo | Status |
-|---|---|---|---|
-| 01 | Perceive + Predict-physics | [perception-factory](https://github.com/manucormon/perception-factory) | ✅ verified |
-| 02 | Predict-intent | `brothers/02_intent/` | 🔲 identified, not built |
-| 03 | Plan | `brothers/03_planning/` | 🔲 identified, not built |
-| 04 | Govern | [sensory-architecture-factory](https://github.com/manucormon/sensory-architecture-factory) | ✅ verified |
+| # | Brother | Repo | Status | Tests | Data |
+|---|---|---|---|---|---|
+| 01 | Perceive + Predict-physics | [perception-factory](https://github.com/manucormon/perception-factory) | ✅ verified | 9/9 | MEASURED (real iPhone video) |
+| 02 | Predict-intent | [intent-factory](https://github.com/manucormon/intent-factory) | ✅ verified | 10/10 | REAL power + DECLARED gradient/fatigue |
+| 03 | Plan | [planning-factory](https://github.com/manucormon/planning-factory) | ✅ verified | 11/11 | REAL input → PLANNED output |
+| 04 | Govern | [sensory-architecture-factory](https://github.com/manucormon/sensory-architecture-factory) | ✅ verified | 146/146 | REAL/PROXY/DECLARED per instance |
+
+**All 4 brothers complete as of August 2026.** Data: GoldenCheetah OpenData (CC BY 4.0) for brothers 02 and 03.
 
 ## Getting started
 
@@ -30,10 +32,23 @@ PAST/PRESENT ──────► FUTURE (physics) ──────► FUTURE
 git clone --recurse-submodules https://github.com/manucormon/kairos-factory.git
 cd kairos-factory
 
-# Run tests for each built brother
+# Run tests for each brother
 pytest brothers/01_perception/instances/tennis_ball/tests/ -v
+pytest brothers/02_intent/intent-factory/instances/cycling/tests/ -v
+pytest brothers/03_planning/planning-factory/instances/cycling/tests/ -v
 pytest brothers/04_govern/ -v
+
+# Run the end-to-end pipeline (all 4 brothers on real cycling data)
+python3 pipeline_demo.py
 ```
+
+## Honest limits
+
+**Brother 02 — intent_factory:** `project_ahead(samples, steps)` classifies
+a caller-supplied hypothetical sequence — it does NOT forecast from current
+state. True temporal intent prediction requires labeled intent data that
+does not exist in public cycling datasets. This limit is documented in
+[intent-factory CONTRACT.md](brothers/02_intent/intent-factory/instances/cycling/CONTRACT.md).
 
 ## Family rules
 

@@ -10,12 +10,12 @@ called verified. These are not recommendations — they are gates.
 Every brother declares its own confidence vocabulary before writing code.
 No brother mixes labeled and unlabeled values.
 
-| Brother | Vocabulary |
-|---|---|
-| perception-factory | MEASURED / TRACKED / PREDICTED |
-| sensory-architecture-factory | REAL / PROXY / DECLARED |
-| intent-factory (future) | to be declared in its CONTRACT.md |
-| planning-factory (future) | to be declared in its CONTRACT.md |
+| Brother | Vocabulary | Status |
+|---|---|---|
+| perception-factory | MEASURED / TRACKED / PREDICTED | ✅ declared + tested |
+| intent-factory | OBSERVED / CLASSIFIED / PROJECTED | ✅ declared + tested |
+| planning-factory | OBSERVED / PLANNED | ✅ declared + tested |
+| sensory-architecture-factory | REAL / PROXY / DECLARED | ✅ declared + tested |
 
 Vocabulary must appear in the brother's own CONTRACT.md before any code is written.
 
