@@ -47,8 +47,9 @@ disciplinas.
 
 ### 1. Percibir + Predecir (física) — `perception_factory`
 **Estado:** construido. `core/tracker.py` (Kalman de aceleración
-constante + detector de rebote), primera instancia `tennis_ball`
-(sintética), 8/8 tests.
+constante + detector de rebote), primera instancia `tennis_ball`,
+9/9 tests. Validado con video real (MEASURED): 100% detección en
+DROP (156 frames, 96.6% reducción de jitter), 92% en THROW lateral.
 **Qué responde:** dado un objeto que obedece física conocida
 (gravedad, restitución), ¿dónde está y dónde estará?
 **Por qué es un problema tratable:** la física es conocida y no
@@ -57,32 +58,42 @@ tuneo (verificado: 43% de reducción con Q/R corregido).
 **Ejemplos que caen aquí:** pelota de tenis, billar, trayectoria de
 salto libre antes de abrir el paracaídas.
 
-### 2. Predecir (intención) — sin construir todavía
-**Estado:** identificado, no diseñado. Nombre provisional:
-`intent_factory`.
-**Qué respondería:** dado OTRO humano tomando una decisión (¿va a
-intentar pasarme?), ¿qué es probable que haga?
-**Por qué NO es el mismo problema que el hermano 1, aunque se sienta
-parecido:** una pelota obedece gravedad; un piloto obedece su propio
-juicio. No hay ecuación física que gobierne una intención — el núcleo
-no puede ser un filtro de Kalman. Esto es modelado de patrón de
-comportamiento, con incertidumbre de una naturaleza distinta,
-irreducible de la misma forma que el ruido de sensor.
-**Ejemplo que cae aquí:** el auto rival en F1 decidiendo si intenta
-el sobrepaso.
+### 2. Predecir (intención) — `intent_factory`
+**Estado:** construido. `core/classifier.py` (clasificador stateless
+ATTACK/MAINTAIN/RECOVER + supresor por gradiente/fatiga), primera
+instancia `cycling` (datos reales GoldenCheetah CC BY 4.0), 10/10
+tests. FTP estimado a 95% del mejor promedio de 20 minutos = 208W.
+**Vocabulario de confianza:** OBSERVED / CLASSIFIED / PROJECTED.
+**Qué responde:** dado el estado sensor actual de un humano (potencia,
+gradiente, fatiga), ¿qué intenta hacer en este momento?
+**Límite honesto documentado:** `project_ahead(samples, steps)`
+clasifica una secuencia hipotética futura dada explícitamente — NO
+predice desde el estado actual hacia el futuro. La predicción temporal
+real requeriría datos etiquetados de intención que no existen en forma
+pública. Este límite está documentado en CONTRACT.md.
+**Por qué NO es el mismo problema que el hermano 1:** una pelota
+obedece gravedad; un ciclista obedece su propio juicio. El núcleo es
+clasificación de patrón de comportamiento, no un filtro de Kalman.
+**Ejemplo:** potencia 1.12 × FTP en gradiente 4% y fatiga 0.3
+→ CLASSIFIED: ATTACK (confirmado en datos reales).
 
-### 3. Planear — sin construir todavía
-**Estado:** identificado, no diseñado. Nombre provisional:
-`planning_factory`.
-**Qué respondería:** dado un terreno o situación estática (viento,
-topografía, obstáculos), ¿cuál es la mejor ruta — sugerida, nunca
-impuesta?
+### 3. Planear — `planning_factory`
+**Estado:** construido. `core/planner.py` (planificador de ritmo en N
+pasos futuros, PLANNED), primera instancia `cycling` (mismos datos
+GoldenCheetah), 11/11 tests. `observe_only=True` hardcodeado en todo
+plan — el planificador nunca ordena.
+**Vocabulario de confianza:** OBSERVED / PLANNED.
+**Qué responde:** dado el estado actual + intención clasificada,
+¿cuál es la secuencia de potencia objetivo para los próximos N pasos?
+(Sugerida, nunca impuesta — invariante de familia.)
 **Por qué NO es el mismo problema que los hermanos 1 ni 2:** no hay
 nada moviéndose que rastrear ni predecir — es optimización sobre un
-espacio de posibilidades ya existente. El núcleo aquí se parece más a
-algoritmos de búsqueda de ruta que a un filtro de estado.
-**Ejemplo que cae aquí:** sugerir la ruta más segura en un salto
-base, con la decisión final siempre del usuario.
+espacio de posibilidades dado el intent ya clasificado. ATTACK → rampa
+al techo modulado por fatiga/gradiente. RECOVER → decaimiento al
+50% FTP. MAINTAIN → hold dentro de la banda [0.56, 1.04] FTP.
+**Hallazgo verificado:** planes ATTACK desde momentos ATTACK reales
+todos mantienen ≥ 1.049 × FTP post-rampa; planes RECOVER desde
+momentos RECOVER reales todos se mantienen ≤ 0.55 × FTP post-caída.
 
 ### 4. Gobernar — `sensory_architecture_factory`
 **Estado:** construido. Núcleo de arbitraje por prioridad/presupuesto,
