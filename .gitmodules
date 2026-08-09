@@ -7,3 +7,6 @@
 [submodule "brothers/02_intent/intent-factory"]
 	path = brothers/02_intent/intent-factory
 	url = https://github.com/manucormon/intent-factory.git
+[submodule "brothers/03_planning/planning-factory"]
+	path = brothers/03_planning/planning-factory
+	url = https://github.com/manucormon/planning-factory.git
