@@ -59,7 +59,8 @@ tuneo (verificado: 43% de reducción con Q/R corregido).
 salto libre antes de abrir el paracaídas.
 
 ### 2. Predecir (intención) — `intent_factory`
-**Estado:** construido. `core/classifier.py` (clasificador stateless
+**Estado:** implementación construida y probada; validez del constructo
+`intent` no evaluada con humanos. `core/classifier.py` (clasificador stateless
 ATTACK/MAINTAIN/RECOVER + supresor por gradiente/fatiga), primera
 instancia `cycling` (datos reales GoldenCheetah CC BY 4.0), 10/10
 tests. FTP estimado a 95% del mejor promedio de 20 minutos = 208W.
@@ -98,7 +99,7 @@ momentos RECOVER reales todos se mantienen ≤ 0.55 × FTP post-caída.
 ### 4. Gobernar — `sensory_architecture_factory`
 **Estado:** construido. Núcleo de arbitraje por prioridad/presupuesto,
 mecanismo híbrido reactivo/proactivo, cuatro instancias (F1, tenis,
-ciclismo, ENMAX), 133 tests, hook de verificación.
+ciclismo, ENMAX), 164 tests, hook de verificación.
 **Qué responde:** de todo lo que los otros tres hermanos saben o
 predicen, ¿qué le llega al humano ahora mismo, y por qué canal?
 **Es el único que mira al presente puro** — no genera predicciones

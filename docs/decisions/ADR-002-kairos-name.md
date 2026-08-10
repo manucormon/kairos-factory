@@ -22,11 +22,10 @@ The name also distinguishes the family's purpose from a clock (Chronos) and
 from a planner (which deals with future time). Kairos is about the present
 moment that matters, which aligns with the Govern brother's role.
 
-The name is:
-- Etymologically accurate for the core operation
-- Defensible in a KPMG / enterprise context (Greek terminology is common in
-  frameworks: Agile, Scrum, Kanban)
-- Distinct from existing product names in the attention-management space
+The name is semantically aligned with the core operation and concise enough for
+internal technical use. This ADR records a conceptual naming decision only; it
+does not claim trademark availability, market distinctiveness, or endorsement
+by any client or third party.
 
 ---
 
@@ -61,10 +60,17 @@ Accepted because:
    convention (e.g., a "search engine" family is named for what it delivers,
    not for each internal component)
 
+## Commercial-name limitation
+
+No trademark or commercial-name clearance was performed as part of this
+technical ADR. Before using Kairos as a public product or client-facing brand,
+the owner must perform the appropriate legal and market search in the intended
+jurisdictions. Until then, the acceptance applies only to the repository's
+internal architecture name.
+
 ---
 
 ## Review trigger
 
-Revisit if the family is pitched to a client who requires an English-only
-naming convention, or if "Kairos" conflicts with an existing trademark in
-the target market.
+Revisit before client-facing commercialization, if an English-only name is
+required, or if a proper clearance search identifies a conflict.

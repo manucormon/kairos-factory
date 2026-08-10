@@ -20,11 +20,13 @@ PAST/PRESENT ──────► FUTURE (physics) ──────► FUTURE
 | # | Brother | Repo | Status | Tests | Data |
 |---|---|---|---|---|---|
 | 01 | Perceive + Predict-physics | [perception-factory](https://github.com/manucormon/perception-factory) | ✅ verified | 9/9 | MEASURED (real iPhone video) |
-| 02 | Predict-intent | [intent-factory](https://github.com/manucormon/intent-factory) | ✅ verified | 10/10 | REAL power + DECLARED gradient/fatigue |
+| 02 | Classify effort state | [intent-factory](https://github.com/manucormon/intent-factory) | ⚠ implementation verified; construct not evaluated | 10/10 | REAL power + DECLARED gradient/fatigue |
 | 03 | Plan | [planning-factory](https://github.com/manucormon/planning-factory) | ✅ verified | 11/11 | REAL input → PLANNED output |
 | 04 | Govern | [sensory-architecture-factory](https://github.com/manucormon/sensory-architecture-factory) | ✅ verified | 164/164 | REAL/PROXY/DECLARED per instance |
 
-**All 4 brothers complete as of August 2026.** Data: GoldenCheetah OpenData (CC BY 4.0) for brothers 02 and 03.
+**All four implementations are built as of August 2026.** Brother 02 remains
+experimental/observe-only until its human construct-validity and automation-bias
+gate is evaluated. Data: GoldenCheetah OpenData (CC BY 4.0) for brothers 02 and 03.
 
 ## Getting started
 
@@ -40,7 +42,17 @@ pytest brothers/04_govern/ -v
 
 # Kairos-level contract and pipeline tests
 pytest tests/ -v
+
+# Run the family contract check and all five suites in isolated processes
+python3 tools/verify_all.py
 ```
+
+`pipelines/cycling.py` loads the checked-out IntentClassifier and PacingPlanner
+directly from their submodules. It deliberately omits Perception because the
+available 2D ball tracker is not physically compatible with power data.
+
+Current package verification: 66 Kairos tests plus 9 Perception, 10 Intent,
+11 Planning, and 164 Sensory tests — 260 total.
 
 ## Honest limits
 

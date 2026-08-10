@@ -1,7 +1,7 @@
 """
 tests/test_cycling_pipeline.py — CyclingPipeline integration scenarios.
 
-9 scenarios required by the reviewer:
+Integration scenarios:
   1. ATTACK intent fires when power > 105% FTP on flat ground
   2. RECOVER intent fires when fatigue >= 0.9
   3. MAINTAIN intent fires at moderate power
@@ -11,12 +11,13 @@ tests/test_cycling_pipeline.py — CyclingPipeline integration scenarios.
   7. Touch preserved in active_channels when plan rejected
   8. plan horizon == steps × step_interval_s
   9. all 5 parent signals present in plan lineage
+ 10. boundary behavior and target arrays match the real brother implementations
+ 11. injected brother ports are actually used
 """
 
 import time
-import uuid
-from typing import List, Optional, Tuple
-from unittest.mock import MagicMock
+from types import SimpleNamespace
+from typing import List, Tuple
 
 import pytest
 
@@ -30,7 +31,11 @@ from contracts.kairos_signal import (
     PlanPayload,
     Provenance,
 )
-from pipelines.cycling import CyclingPipeline
+from pipelines.cycling import (
+    CyclingPipeline,
+    _default_intent_classifier,
+    _default_planner_factory,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -54,6 +59,24 @@ class MockTransport:
         return self.calls[-1]
 
 
+class RecordingPlannerFactory:
+    """Wrap the real planning brother and record every orchestration call."""
+
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, dt: float):
+        delegate = _default_planner_factory(dt)
+        owner = self
+
+        class RecordingPlanner:
+            def plan(self, **kwargs):
+                owner.calls.append((dt, dict(kwargs)))
+                return delegate.plan(**kwargs)
+
+        return RecordingPlanner()
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -74,10 +97,16 @@ def _run(
     plan_horizon_s: float = 10.0,
     step_interval_s: float = 1.0,
     transport=None,
+    intent_classifier=None,
+    planner_factory=None,
 ) -> Tuple[GovernanceDecision, KairosSignal, MockTransport]:
     t = MockTransport() if transport is None else transport
     now = _now()
-    pipeline = CyclingPipeline(transport=t)
+    pipeline = CyclingPipeline(
+        transport=t,
+        intent_classifier=intent_classifier,
+        planner_factory=planner_factory,
+    )
     dec, plan = pipeline.run(
         power_w=power_w,
         ftp_w=ftp_w,
@@ -106,14 +135,14 @@ class TestAttackIntent:
             event_offset_s=8.0, plan_horizon_s=10.0, step_interval_s=1.0,
         )
         assert isinstance(plan.payload, PlanPayload)
-        # ATTACK targets should be above MAINTAIN (85% FTP = 176.8W)
-        assert plan.payload.targets_w[0] > 208.0 * 0.85
+        # The real planner ramps from current power and then holds above FTP.
+        assert plan.payload.targets_w[-1] > 208.0 * 1.05
 
     def test_attack_suppressed_at_high_fatigue(self):
         """fatigue >= 0.9 → RECOVER even when power is above FTP"""
         dec, plan, t = _run(power_w=230.0, ftp_w=208.0, gradient_pct=0.0, fatigue=0.95)
-        # RECOVER target is 55% FTP = 114.4W
-        assert plan.payload.targets_w[0] < 208.0 * 0.7
+        # The real planner decays from current power to 50% FTP.
+        assert plan.payload.targets_w[-1] == pytest.approx(208.0 * 0.50)
 
 
 # ---------------------------------------------------------------------------
@@ -123,13 +152,13 @@ class TestAttackIntent:
 class TestRecoverIntent:
     def test_recover_at_high_fatigue(self):
         dec, plan, t = _run(power_w=200.0, ftp_w=208.0, fatigue=0.95)
-        target = plan.payload.targets_w[0]
+        target = plan.payload.targets_w[-1]
         assert target < 208.0 * 0.7, f"RECOVER target {target}W should be below 70% FTP"
 
     def test_recover_at_low_power(self):
         dec, plan, t = _run(power_w=100.0, ftp_w=208.0, fatigue=0.0)
-        # 100W < 60% of 208W=124.8W → RECOVER
-        target = plan.payload.targets_w[0]
+        # 100W < 55% of 208W=114.4W → RECOVER
+        target = plan.payload.targets_w[-1]
         assert target < 208.0 * 0.7
 
 
@@ -140,9 +169,9 @@ class TestRecoverIntent:
 class TestMaintainIntent:
     def test_maintain_at_moderate_power(self):
         dec, plan, t = _run(power_w=170.0, ftp_w=208.0, fatigue=0.3)
-        # MAINTAIN → 85% FTP = 176.8W; gradient=0 so no penalty
+        # Real planner holds the current ratio on flat ground.
         target = plan.payload.targets_w[0]
-        assert abs(target - 208.0 * 0.85) < 1.0
+        assert target == pytest.approx(170.0)
 
 
 # ---------------------------------------------------------------------------
@@ -330,6 +359,11 @@ class TestPlanHorizon:
         actual = plan.valid_until_s - plan.valid_from_s
         assert abs(actual - expected) < 1e-6
 
+    def test_non_divisible_horizon_rounds_up_without_undercoverage(self):
+        _, plan, _ = _run(plan_horizon_s=10.0, step_interval_s=3.0)
+        assert plan.payload.steps == 4
+        assert plan.valid_until_s - plan.valid_from_s == pytest.approx(12.0)
+
 
 # ---------------------------------------------------------------------------
 # Scenario 9 — plan lineage contains all 5 parent signals
@@ -356,3 +390,91 @@ class TestPlanLineage:
         dec, plan, t = _run()
         ids = plan.parent_signal_ids
         assert len(ids) == len(set(ids)), "Plan parent_signal_ids contains duplicates"
+
+
+# ---------------------------------------------------------------------------
+# Scenario 10 — parity with the checked-out brothers
+# ---------------------------------------------------------------------------
+
+class TestBrotherParity:
+    @pytest.mark.parametrize(
+        "power_ratio,gradient_pct,fatigue,expected_label",
+        [
+            (1.05, 0.0, 0.10, "MAINTAIN"),      # ATTACK is strictly > 1.05
+            (1.0501, 15.0, 0.10, "ATTACK"),     # gradient ceiling is strictly > 15
+            (1.0501, 15.0001, 0.10, "MAINTAIN"),
+            (1.0501, 0.0, 0.8499, "ATTACK"),
+            (1.0501, 0.0, 0.85, "MAINTAIN"),
+            (1.0501, 0.0, 0.90, "RECOVER"),
+            (0.55, 0.0, 0.10, "MAINTAIN"),      # RECOVER is strictly < 0.55
+            (0.5499, 0.0, 0.10, "RECOVER"),
+        ],
+    )
+    def test_boundary_label_and_targets_match_brothers(
+        self, power_ratio, gradient_pct, fatigue, expected_label
+    ):
+        ftp_w = 200.0
+        power_w = ftp_w * power_ratio
+        classifier = _default_intent_classifier()
+        expected_state = classifier.classify(
+            power_w=power_w,
+            ftp_w=ftp_w,
+            gradient_pct=gradient_pct,
+            fatigue=fatigue,
+        )
+        assert expected_state.label == expected_label
+
+        recording_factory = RecordingPlannerFactory()
+        _, plan, _ = _run(
+            power_w=power_w,
+            ftp_w=ftp_w,
+            gradient_pct=gradient_pct,
+            fatigue=fatigue,
+            event_offset_s=5.0,
+            planner_factory=recording_factory,
+        )
+
+        assert len(recording_factory.calls) == 1
+        dt, kwargs = recording_factory.calls[0]
+        assert kwargs["intent"] == expected_state.label
+        expected_plan = _default_planner_factory(dt).plan(**kwargs)
+        assert plan.payload.targets_w == tuple(expected_plan.targets_w)
+        assert plan.payload.observe_only is expected_plan.observe_only is True
+        assert plan.valid_until_s - plan.valid_from_s == pytest.approx(
+            expected_plan.dt_ahead
+        )
+
+
+# ---------------------------------------------------------------------------
+# Scenario 11 — dependency injection and timing validation
+# ---------------------------------------------------------------------------
+
+class TestBrotherPorts:
+    def test_injected_classifier_and_planner_are_used(self):
+        classifier = SimpleNamespace()
+        classifier.classify = lambda **kwargs: SimpleNamespace(
+            label="RECOVER", attack_suppressed=False
+        )
+
+        class FixedPlanner:
+            def plan(self, **kwargs):
+                assert kwargs["intent"] == "RECOVER"
+                return SimpleNamespace(
+                    targets_w=[123.0] * kwargs["steps"],
+                    dt_ahead=kwargs["steps"] * 1.0,
+                    observe_only=True,
+                )
+
+        _, plan, _ = _run(
+            intent_classifier=classifier,
+            planner_factory=lambda dt: FixedPlanner(),
+        )
+        assert plan.payload.targets_w == (123.0,) * plan.payload.steps
+
+    @pytest.mark.parametrize(
+        "horizon,interval",
+        [(0.0, 1.0), (-1.0, 1.0), (10.0, 0.0), (10.0, -1.0)],
+    )
+    def test_invalid_plan_timing_is_rejected(self, horizon, interval):
+        with pytest.raises(ValueError, match="positive and finite"):
+            _run(plan_horizon_s=horizon, step_interval_s=interval)

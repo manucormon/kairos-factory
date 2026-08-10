@@ -37,7 +37,7 @@ No brother mixes labeled and unlabeled values.
 | Brother | Vocabulary | Status |
 |---|---|---|
 | perception-factory | MEASURED / TRACKED / PREDICTED | ✅ declared + tested |
-| intent-factory | OBSERVED / CLASSIFIED / PROJECTED | ✅ declared + tested |
+| intent-factory | OBSERVED / CLASSIFIED / PROJECTED | ⚠ implementation tested; construct not evaluated |
 | planning-factory | OBSERVED / PLANNED | ✅ declared + tested |
 | sensory-architecture-factory | REAL / PROXY / DECLARED | ✅ declared + tested |
 
@@ -98,6 +98,8 @@ it being added because the previous brother had it?
 
 ## Checklist before a brother is verified
 
+- [ ] Human-behavior prediction has Guardrail 1 evidence, or is explicitly
+      marked experimental / construct-not-evaluated and blocked from deployment
 - [ ] Confidence vocabulary declared in CONTRACT.md
 - [ ] Latency documented with measured values
 - [ ] At least one verified finding with a passing test

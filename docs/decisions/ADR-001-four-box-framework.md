@@ -1,7 +1,7 @@
 # ADR-001 — Validity and provisional limits of the four-box framework
 
 **Date:** 2026-08-09
-**Status:** Accepted with documented constraints
+**Status:** Provisionally accepted with documented constraints
 
 ---
 
@@ -11,18 +11,21 @@ The Kairos family organizes its brothers around a single temporal axis:
 Perceive (present) → Predict-physics (near future, known dynamics) →
 Predict-intent / Plan (near future, open choices) → Govern (present, human-facing).
 
-This four-box framework is accepted as the organizing structure for the family.
+This four-box framework is accepted as a provisional organizing taxonomy for
+the family. It is not yet claimed as an empirically validated general framework.
 
 ---
 
 ## Rationale
 
-The axis provides a principled reason for why four brothers exist and not three
-or five. Each box answers a different question about time, which prevents scope
-overlap and makes it clear where a new capability belongs.
+The axis provides a working reason for why the current capabilities are kept
+separate. Each box answers a different operational question, which helps prevent
+scope overlap and gives new capabilities an explicit placement test.
 
-The framework was validated against three instances (tennis ball, cycling, energy
-utility dispatch) where the separation held without forcing.
+The taxonomy is illustrated by individual instances in tennis-ball tracking,
+cycling, and utility dispatch. Those examples exercise different subsets of the
+family; they do not constitute three independent end-to-end validations. Cycling
+is currently the only cross-brother orchestration example.
 
 ---
 
@@ -49,12 +52,13 @@ separate boxes. They are combined because no instance currently needs them
 separated. If a domain needs pure perception without physics prediction, or
 physics prediction at much longer horizons, this should be revisited.
 
-**Transition between boxes is not formalized.**
-The family contract says brothers communicate via KairosSignal. In practice,
-the cycling pipeline in kairos-factory reimplements brothers' logic rather
-than calling them. This is a known divergence tracked in
-`pipelines/cycling.py` (inline comment) and is a priority fix before any
-production use.
+**Not every transition is executed by the orchestrator.**
+The cycling pipeline calls the checked-out IntentClassifier and PacingPlanner
+and wraps their outputs in KairosSignal. Perception is deliberately absent
+because the available tracker is not physically compatible with power data.
+The domain governance layer supplies `active_channels`; Kairos performs the
+temporal and compatible-channel admission step. A second end-to-end domain is
+still needed before claiming the taxonomy generalizes.
 
 ---
 
@@ -75,4 +79,4 @@ labeled outcomes to learn from. Open for future consideration.
 Revisit this ADR if:
 - A new brother doesn't fit cleanly into any existing box
 - Box 02 is used in a context where labeled intent data exists
-- The pipeline integration (brothers calling each other) is fully implemented
+- A second domain exercises the same boundaries end to end
