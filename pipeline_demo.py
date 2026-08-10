@@ -1,4 +1,18 @@
 """
+LEGACY — DO NOT USE AS REFERENCE.
+
+This demo applies KalmanTracker (designed for 1-D ball position) to raw
+power watts. That is physically invalid: KalmanTracker assumes constant-
+acceleration motion and clamps negative predictions with max(0, pred.x),
+which has no physical meaning for power. The tracked_power column this
+produces is noise, not signal.
+
+Status: retained for git history only. The perception step is not
+applicable to power data. See pipelines/cycling.py for the current
+(KairosSignal-based) pipeline; see README.md for how to run real tests.
+
+Original description:
+----------------------------------------------------------------------
 Kairos family — end-to-end pipeline demo.
 
 Data: GoldenCheetah OpenData (CC BY 4.0, anonymous athlete)

@@ -187,7 +187,7 @@ class CyclingPipeline:
         intent_sig = self._make_signal(
             payload=IntentPayload(
                 label=intent_label,
-                attack_suppressed=(fatigue >= 0.9),
+                attack_suppressed=(fatigue >= 0.85),
                 calibrated_probability=None,
             ),
             payload_type=PayloadType.INTENT,
@@ -298,15 +298,20 @@ class CyclingPipeline:
         fatigue: float,
         gradient_pct: float,
     ) -> IntentLabel:
+        # Mirrors IntentClassifier thresholds exactly — keep in sync with
+        # intent_factory/core/classifier.py or replace with injected classifier.
         if ftp_w <= 0:
             return IntentLabel.RECOVER
         ratio = power_w / ftp_w
-        if fatigue >= 0.9:
+        # Extreme fatigue forces recovery regardless of power
+        if fatigue >= 0.90:
             return IntentLabel.RECOVER
-        if ratio > 1.05 and gradient_pct >= 0:
+        # RECOVER on low power
+        if ratio < 0.55:
+            return IntentLabel.RECOVER
+        # ATTACK suppressed above fatigue ceiling or gradient ceiling
+        if ratio > 1.05 and fatigue < 0.85 and gradient_pct < 15.0:
             return IntentLabel.ATTACK
-        if ratio < 0.6:
-            return IntentLabel.RECOVER
         return IntentLabel.MAINTAIN
 
     @staticmethod

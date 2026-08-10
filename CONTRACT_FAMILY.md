@@ -5,6 +5,30 @@ called verified. These are not recommendations — they are gates.
 
 ---
 
+## 0. Automation bias evaluation before building a predictive brother (Guardrail 1)
+
+Any brother that predicts human behavior must evaluate whether its output
+improves or worsens human judgment under time pressure before being used
+in any non-experimental context. "The human decides in the end" does not
+neutralize the risk: time pressure increases over-reliance on automation,
+not reduces it.
+
+Required evidence before a predictive brother is considered production-ready:
+- A comparison of human decisions with and without the brother's label
+- Evaluated under realistic time pressure, not in a reflective lab setting
+- Result documented in the brother's NOTES.md
+
+**PROCESS DEVIATION — intent-factory (Brother 02):**
+Guardrail 1 existed in FAMILY.md (August 8, 2026) before intent-factory
+code was written (August 9, 2026). The evaluation was not performed before
+building. This is recorded honestly as a deviation, not corrected retroactively.
+
+Current status of intent-factory:
+- `CONSTRUCT_VALIDITY: NOT_EVALUATED`
+- Permitted use: experimental / observe-only
+- Blocked use: any deployment where intent labels could influence time-critical decisions
+- Unblocks when: human-judgment comparison study is completed and documented
+
 ## 1. Confidence vocabulary (Guardrail 3)
 
 Every brother declares its own confidence vocabulary before writing code.
