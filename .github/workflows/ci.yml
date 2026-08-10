@@ -1,0 +1,107 @@
+name: Kairos Family CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Each brother runs in its own job (isolated Python process) to prevent
+# the `core` package name collision — all 4 brothers expose a `core/` module.
+
+jobs:
+  # ------------------------------------------------------------------
+  # Kairos-level: contracts, pipeline, and verify_family
+  # ------------------------------------------------------------------
+  kairos-contracts:
+    name: "Kairos — contracts & pipeline (52 tests)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - run: pip install pytest
+      - name: verify_family.py
+        run: python3 tools/verify_family.py
+      - name: Contract and pipeline tests
+        run: pytest tests/ -v --tb=short
+
+  # ------------------------------------------------------------------
+  # Brother 01 — perception-factory (9 tests, numpy)
+  # ------------------------------------------------------------------
+  brother-01-perception:
+    name: "Brother 01 — perception-factory (9 tests)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        run: pip install numpy>=1.21 pytest>=7.0
+      - name: Run perception tests
+        working-directory: brothers/01_perception
+        run: pytest instances/tennis_ball/tests/ -v --tb=short
+
+  # ------------------------------------------------------------------
+  # Brother 02 — intent-factory (10 tests, no extra deps)
+  # ------------------------------------------------------------------
+  brother-02-intent:
+    name: "Brother 02 — intent-factory (10 tests)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - run: pip install pytest>=7.0
+      - name: Run intent tests
+        working-directory: brothers/02_intent/intent-factory
+        run: pytest instances/cycling/tests/ -v --tb=short
+
+  # ------------------------------------------------------------------
+  # Brother 03 — planning-factory (11 tests, no extra deps)
+  # ------------------------------------------------------------------
+  brother-03-planning:
+    name: "Brother 03 — planning-factory (11 tests)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - run: pip install pytest>=7.0
+      - name: Run planning tests
+        working-directory: brothers/03_planning/planning-factory
+        run: pytest instances/cycling/tests/ -v --tb=short
+
+  # ------------------------------------------------------------------
+  # Brother 04 — sensory-architecture-factory (164 tests, full deps)
+  # ------------------------------------------------------------------
+  brother-04-govern:
+    name: "Brother 04 — sensory-architecture-factory (164 tests)"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: pip install -r brothers/04_govern/requirements.txt
+      - name: Run sensory-architecture-factory tests
+        working-directory: brothers/04_govern
+        run: pytest tests/ -q --tb=short -p no:randomly
